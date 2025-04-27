@@ -1,0 +1,20 @@
+name: chat_gpt_sdk_lululala
+description: follow up on the chat_gpt_sdk
+version: 3.2.2
+homepage: https://www.facebook.com/REDEVRX
+
+environment:
+  sdk: ^3.5.3
+#  flutter: ">=1.17.0"
+
+dependencies:
+  dio: ^5.7.0
+  http_parser: ^4.0.0
+#  path_provider: ^2.1.4
+
+dev_dependencies:
+  mockito: ^5.4.1
+  build_runner: ^2.4.4
+  lints: ^4.0.0
+  coverage: ^1.7.2
+  test: ^1.25.2
