@@ -33,7 +33,9 @@ class _TranslateScreenState extends State<TranslateScreen> {
   Future<CompleteResponse?>? _translateFuture;
   void _translateEngToThai() async {
     final request = CompleteText(
-        prompt: translateEngToThai(word: _txtWord.text.toString()), maxTokens: 200, model: Gpt3TurboInstruct());
+        prompt: translateEngToThai(word: _txtWord.text.toString()),
+        maxTokens: 200,
+        model: Gpt3TurboInstruct());
 
     setState(() {
       _translateFuture = openAI.onCompletion(request: request);
@@ -44,7 +46,11 @@ class _TranslateScreenState extends State<TranslateScreen> {
   void gptFunctionCalling() async {
     final request = ChatCompleteText(
       messages: [
-        Messages(role: Role.user, content: "What is the weather like in Boston?", name: "get_current_weather").toJson(),
+        Messages(
+                role: Role.user,
+                content: "What is the weather like in Boston?",
+                name: "get_current_weather")
+            .toJson(),
       ],
       maxToken: 200,
       model: Gpt41106PreviewChatModel(),
@@ -57,7 +63,10 @@ class _TranslateScreenState extends State<TranslateScreen> {
             "parameters": {
               "type": "object",
               "properties": {
-                "location": {"type": "string", "description": "The city and state, e.g. San Francisco, CA"},
+                "location": {
+                  "type": "string",
+                  "description": "The city and state, e.g. San Francisco, CA"
+                },
                 "unit": {
                   "type": "string",
                   "enum": ["celsius", "fahrenheit"]
@@ -81,7 +90,7 @@ class _TranslateScreenState extends State<TranslateScreen> {
         {
           "role": "user",
           "content": [
-            {"type": "text", "text": "What’s in this image?"},
+            {"type": "text", "text": "What's in this image?"},
             {
               "type": "image_url",
               "image_url": {
@@ -110,9 +119,12 @@ class _TranslateScreenState extends State<TranslateScreen> {
 
   @override
   void initState() {
-    openAI = OpenAI.instance.build(
-        token: kToken,
-        baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 20), connectTimeout: const Duration(seconds: 20)),
+    openAI = OpenAI.createOpenAI(
+        token: token,
+        baseOption: HttpSetup(
+            receiveTimeout: const Duration(seconds: 6),
+            connectTimeout: const Duration(seconds: 6),
+            sendTimeout: const Duration(seconds: 6)),
         enableLog: true);
     super.initState();
   }
@@ -243,7 +255,9 @@ class _TranslateScreenState extends State<TranslateScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(4.0),
-              decoration: BoxDecoration(color: Colors.indigoAccent, borderRadius: BorderRadius.circular(50.0)),
+              decoration: BoxDecoration(
+                  color: Colors.indigoAccent,
+                  borderRadius: BorderRadius.circular(50.0)),
               child: const Icon(
                 Icons.translate,
                 color: Colors.white,
@@ -361,7 +375,9 @@ class _TranslateScreenState extends State<TranslateScreen> {
           children: [
             TextField(
               decoration: const InputDecoration(
-                  border: InputBorder.none, enabledBorder: InputBorder.none, disabledBorder: InputBorder.none),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none),
               controller: _txtWord,
               maxLines: 6,
               textInputAction: TextInputAction.newline,

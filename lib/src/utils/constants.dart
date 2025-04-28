@@ -1,5 +1,8 @@
+import 'package:chat_gpt_sdk_lululala/src/utils/token_builder.dart';
+
 /// Base ChatGPT Url
 const kURL = "https://api.openai.com/v1/";
+const kOpenRouterURL = "https://openrouter.ai/api/v1/";
 
 const kCompletion = 'completions';
 
@@ -103,7 +106,11 @@ Map<String, String> kHeader(
   String? token,
   String? orgId,
 ) {
-  final headers = {'Content-Type': 'application/json'};
+  final headers = {
+    'Content-Type': 'application/json',
+    'HTTP-Referer': 'https://localhost', // Required for OpenRouter
+    'X-Title': 'Local Testing', // Optional for OpenRouter
+  };
 
   if (token != null) {
     headers['Authorization'] = 'Bearer $token';

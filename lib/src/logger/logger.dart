@@ -2,20 +2,14 @@ import 'package:chat_gpt_sdk_lululala/src/utils/constants.dart';
 import 'dart:developer' as dev;
 
 class Logger {
-  Logger._();
-
-  ///[instance]
-  ///return instance of Logger
-  static Logger instance = Logger._();
-
-  /// [isLogging]
-  /// use for enable log
   bool isLogging = false;
 
-  Logger builder({required bool isLogging}) {
-    this.isLogging = isLogging;
+  Logger();
 
-    return instance;
+  static Logger create({required bool isLogging}) {
+    final logger = Logger();
+    logger.isLogging = isLogging;
+    return logger;
   }
 
   void log(String message) {

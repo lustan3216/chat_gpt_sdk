@@ -10,7 +10,12 @@ import 'model/gen_image/response/gen_img_response.dart';
 import 'openai.dart';
 
 mixin IOpenAI {
-  OpenAI build({String? token, HttpSetup? baseOption, bool enableLog = false});
+  OpenAI build({
+    String? token,
+    HttpSetup? baseOption,
+    String? apiUrl,
+    bool enableLog = false,
+  });
   listModel({void Function(CancelData cancelData)? onCancel});
   listEngine({void Function(CancelData cancelData)? onCancel});
   Future<CompleteResponse?> onCompletion({

@@ -1,20 +1,23 @@
-import 'package:chat_gpt_sdk_lululala/chat_gpt_sdk_lululala.dart';
+import 'package:chat_gpt_sdk_lululala/src/client/exception/missing_token_exception.dart';
+import 'package:chat_gpt_sdk_lululala/src/openai.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('empty token', () {
+    expect(
+      () => OpenAI.createOpenAI(token: ''),
+      throwsA(isA<MissingTokenException>()),
+    );
+  });
+
+  test('token is null', () {
+    expect(
+      () => OpenAI.createOpenAI(),
+      throwsA(isA<MissingTokenException>()),
+    );
+  });
+
   group('missing token test', () {
-    test("missing token not found token test", () {
-      expect(
-        () => OpenAI.instance.build(token: ''),
-        throwsA(isA<MissingTokenException>()),
-      );
-    });
-    test("missing token is null test", () {
-      expect(
-        () => OpenAI.instance.build(),
-        throwsA(isA<MissingTokenException>()),
-      );
-    });
     test("missing token Exception set value test", () {
       final missingToken = MissingTokenException();
 

@@ -30,70 +30,151 @@ import 'model/cancel/cancel_data.dart';
 
 //const msgDeprecate = "not support in version 2.0.6";
 
-class OpenAI implements IOpenAI {
-  OpenAI._();
-
-  ///instance of openai [instance]
-  static OpenAI instance = OpenAI._();
-
-  late OpenAIClient _client;
-
-  /// set new token
-  void setToken(String token) {
-    TokenBuilder.build.setToken(token);
-  }
-
-  String get token => "${TokenBuilder.build.token}";
-
-  /// set organization id
-  void setOrgId(String orgId) {
-    TokenBuilder.build.setOrgId(orgId);
-  }
-
-  String get orgId => "${TokenBuilder.build.orgId}";
-
-  ///build environment for openai [build]
-  ///setup http client
-  ///setup logger
-  @override
-  OpenAI build({
+class OpenAIFactory {
+  /// 创建新的OpenAI实例
+  static OpenAI create({
     String? token,
     String? orgId,
     String? apiUrl,
     HttpSetup? baseOption,
     bool enableLog = false,
+    bool useOpenRouter = false,
   }) {
-    if ("$token".isEmpty || token == null) throw MissingTokenException();
-    final setup = baseOption ?? HttpSetup();
-    setToken(token);
-
-    if (orgId != null) {
-      setOrgId(orgId);
+    // Always update token if provided
+    if (token != null) {
+      TokenBuilder.build.setToken(token);
     }
+    
+    if (!TokenBuilder.build.isOrgIdLocked && orgId != null) {
+      TokenBuilder.build.setOrgId(orgId);
+    }
+    
+    // Always update apiUrl
+    if (useOpenRouter) {
+      TokenBuilder.build.setApiUrl(kOpenRouterURL);
+    } else {
+      TokenBuilder.build.setApiUrl(apiUrl ?? kURL);
+    }
+    
+    final instance = OpenAI();
+    instance._initialize(
+      baseOption: baseOption,
+      enableLog: enableLog,
+    );
+    return instance;
+  }
+}
 
+class OpenAI implements IOpenAI {
+  OpenAI();
+
+  late OpenAIClient _client;
+  String _token = '';
+  String? _orgId;
+  String _apiUrl = '';
+
+  /// 创建新的OpenAI实例的工厂方法
+  static OpenAI createOpenAI({
+    String? token,
+    String? orgId,
+    String? apiUrl,
+    HttpSetup? baseOption,
+    bool enableLog = false,
+    bool useOpenRouter = false,
+  }) {
+    final instance = OpenAI();
+    
+    // Set instance-specific values
+    if (token != null) {
+      instance._token = token;
+    }
+    if (orgId != null) {
+      instance._orgId = orgId;
+    }
+    instance._apiUrl = useOpenRouter ? kOpenRouterURL : (apiUrl ?? kURL);
+    
+    instance._initialize(
+      baseOption: baseOption,
+      enableLog: enableLog,
+    );
+    return instance;
+  }
+
+  @override
+  OpenAI build({
+    String? token,
+    String? apiUrl,
+    HttpSetup? baseOption,
+    bool enableLog = false,
+  }) {
+    // Check if token is provided
+    if (token?.isEmpty ?? true) {
+      throw MissingTokenException();
+    }
+    
+    // Update instance values
+    if (token != null) {
+      _token = token;
+    }
+    if (apiUrl != null) {
+      _apiUrl = apiUrl;
+    }
+    
+    _initialize(
+      baseOption: baseOption,
+      enableLog: enableLog,
+    );
+    return this;
+  }
+
+  void _initialize({
+    HttpSetup? baseOption,
+    bool enableLog = false,
+  }) {
+    final setup = baseOption ?? HttpSetup();
     final dio = Dio(BaseOptions(
       sendTimeout: setup.sendTimeout,
       connectTimeout: setup.connectTimeout,
       receiveTimeout: setup.receiveTimeout,
     ));
+
     if (setup.proxy.isNotEmpty) {
       dio.httpClientAdapter = IOHttpClientAdapter(createHttpClient: () {
         final client = HttpClient();
         client.findProxy = (uri) {
-          /// "PROXY localhost:7890"
           return setup.proxy;
         };
-
         return client;
       });
     }
-    dio.interceptors.add(InterceptorWrapper());
 
-    final _apiUrl = (apiUrl?.isNotEmpty ?? false) ? apiUrl! : kURL;
-    _client = OpenAIClient(dio: dio, apiUrl: _apiUrl, isLogging: enableLog);
-
-    return instance;
+    dio.interceptors.add(InterceptorWrapper(token: _token, orgId: _orgId));
+    _client = OpenAIClient(
+      dio: dio, 
+      apiUrl: _apiUrl,
+      isLogging: enableLog,
+      token: _token,
+      orgId: _orgId,
+    );
   }
+
+  /// set new token for this instance
+  void setToken(String token) {
+    _token = token;
+    // Re-initialize client with new token
+    _initialize(enableLog: _client.isLogging);
+  }
+
+  String get token => _token;
+
+  /// set organization id for this instance
+  void setOrgId(String? orgId) {
+    _orgId = orgId;
+    // Re-initialize client with new orgId
+    _initialize(enableLog: _client.isLogging);
+  }
+
+  String? get orgId => _orgId;
 
   ///find all list model ai [listModel]
   @override

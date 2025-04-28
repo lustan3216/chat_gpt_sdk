@@ -14,22 +14,30 @@ class OpenAIClient extends OpenAIWrapper {
   OpenAIClient({
     required Dio dio,
     required String apiUrl,
+    required String token,
+    String? orgId,
     bool isLogging = false,
   }) {
     _dio = dio;
     _apiUrl = apiUrl;
-    log = Logger.instance.builder(isLogging: isLogging);
+    _token = token;
+    _orgId = orgId;
+    log = Logger.create(isLogging: isLogging);
   }
 
   ///[_dio]
   late Dio _dio;
+  late String _apiUrl;
+  late String _token;
+  String? _orgId;
 
   ///[log]
   late Logger log;
-
-  late String _apiUrl;
+  bool get isLogging => log.isLogging;
 
   String get apiUrl => _apiUrl;
+  String get token => _token;
+  String? get orgId => _orgId;
 
   Future<T> get<T>(
     String url, {
@@ -105,7 +113,10 @@ class OpenAIClient extends OpenAIWrapper {
           onDone: () {
             final rawData = utf8.decode(chunks);
 
-            final dataList = rawData.split("\n").where((element) => element.isNotEmpty).toList();
+            final dataList = rawData
+                .split("\n")
+                .where((element) => element.isNotEmpty)
+                .toList();
 
             for (final line in dataList) {
               if (line.startsWith("data: ")) {
@@ -410,7 +421,8 @@ class OpenAIClient extends OpenAIWrapper {
                   ..sink
                   ..addError(
                     handleError(
-                      code: err.response?.statusCode ?? HttpStatus.internalServerError,
+                      code: err.response?.statusCode ??
+                          HttpStatus.internalServerError,
                       message: '${err.message}',
                       data: err.response?.data,
                     ),
@@ -428,9 +440,12 @@ class OpenAIClient extends OpenAIWrapper {
               ..sink
               ..addError(
                 handleError(
-                  code: error.response?.statusCode ?? HttpStatus.internalServerError,
+                  code: error.response?.statusCode ??
+                      HttpStatus.internalServerError,
                   message: '${error.message}',
-                  data: error.response?.data is Map<String, dynamic> ? error.response?.data : null,
+                  data: error.response?.data is Map<String, dynamic>
+                      ? error.response?.data
+                      : null,
                 ),
                 t,
               );
@@ -503,7 +518,8 @@ class OpenAIClient extends OpenAIWrapper {
         code: code,
         data: OpenAIError.fromJson(data, message),
       );
-    } else if (code == HttpStatus.badRequest && '${data?['error']?['message']}'.contains(kRateLimitMessage)) {
+    } else if (code == HttpStatus.badRequest &&
+        '${data?['error']?['message']}'.contains(kRateLimitMessage)) {
       return OpenAIRateLimitError(
         code: code,
         data: OpenAIError.fromJson(data, message),

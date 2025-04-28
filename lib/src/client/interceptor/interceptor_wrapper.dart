@@ -4,16 +4,24 @@ import 'package:dio/dio.dart';
 import '../../utils/constants.dart';
 
 class InterceptorWrapper extends Interceptor {
+  final String token;
+  final String? orgId;
+
+  InterceptorWrapper({
+    required this.token,
+    this.orgId,
+  });
+
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     options.headers.addAll(
       kHeader(
-        TokenBuilder.build.token,
-        TokenBuilder.build.orgId,
+        token,
+        orgId,
       ),
     );
 
-    return handler.next(options); // super.onRequest(options, handler);
+    return handler.next(options);
   }
 
   @override
