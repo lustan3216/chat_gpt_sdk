@@ -113,10 +113,7 @@ class OpenAIClient extends OpenAIWrapper {
           onDone: () {
             final rawData = utf8.decode(chunks);
 
-            final dataList = rawData
-                .split("\n")
-                .where((element) => element.isNotEmpty)
-                .toList();
+            final dataList = rawData.split("\n").where((element) => element.isNotEmpty).toList();
 
             for (final line in dataList) {
               if (line.startsWith("data: ")) {
@@ -432,20 +429,41 @@ class OpenAIClient extends OpenAIWrapper {
             },
           );
         },
-        onError: (err, t) {
+        onError: (err, t) async {
           log.error(err, t);
           if (err is DioException) {
             final error = err;
+            Map<String, dynamic>? errorData;
+
+            // 嘗試讀取 response data
+            if (error.response?.data != null) {
+              final data = error.response!.data;
+
+              if (data is ResponseBody) {
+                // ResponseBody (stream) - 需要讀取 stream 內容
+                try {
+                  final chunks = <int>[];
+                  await for (final chunk in data.stream) {
+                    chunks.addAll(chunk);
+                  }
+                  final responseString = utf8.decode(chunks);
+                  print('API Response Body: $responseString');
+                  errorData = json.decode(responseString) as Map<String, dynamic>?;
+                } catch (e) {
+                  print('Failed to read ResponseBody: $e');
+                }
+              } else if (data is Map<String, dynamic>) {
+                errorData = data;
+              }
+            }
+
             controller
               ..sink
               ..addError(
                 handleError(
-                  code: error.response?.statusCode ??
-                      HttpStatus.internalServerError,
+                  code: error.response?.statusCode ?? HttpStatus.internalServerError,
                   message: '${error.message}',
-                  data: error.response?.data is Map<String, dynamic>
-                      ? error.response?.data
-                      : null,
+                  data: errorData,
                 ),
                 t,
               );
